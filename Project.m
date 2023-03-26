@@ -11,82 +11,96 @@ Vline = 380;
 f = 50;
 p = 3;
 Vp = double(Vline / sqrt(3));
-Vth = zeros(1,2);
+
 
 % Calculate Vth
-for i=1.0:1.0:2.0
-  
-    Vth(i) = (Xm(i) / sqrt(R1(i)^2 + (X1(i)+Xm(i)^2)))*Vp;
-    disp(['Vth' num2str(i) ' = ' num2str(Vth(i))])
-end
+Vth = (Xm ./ sqrt(R1.^2 + (X1+Xm).^2)).*Vp;
+disp(['Vth ' num2str(Vth)])
+
 
 % Calculate Voc
-Voc = complex(zeros(1,2), zeros(1,2));
-for i=1.0:1.0:2.0
-    Voc(i) = ((complex(0,Xm(i)))/(R1(i) + complex(0,X1(i)+Xm(i))))*Vp;
-    disp(['Voc' num2str(i) ' = ' num2str(Voc(i))])
-end
+Voc = complex(0,Xm)./(R1 + complex(0,X1+Xm)).*Vp;
+disp(['Voc = ' num2str(Voc)])
 
 % Calculate Isc
-Isc = complex(zeros(1,2), zeros(1,2));
-for i=1.0:1.0:2.0
-    Isc(i) = Vp/(R1(i) + complex(0, X1(i)));
-    disp(['Isc' num2str(i) ' = ' num2str(Isc(i))])
-end
-
+Isc = Vp./(R1 + complex(0, X1));
+disp(['Isc = ' num2str(Isc)])
+  
 % Calculate Zth
-Zth = complex(zeros(1,2), zeros(1,2));
-for i=1.0:1.0:2.0
-    Zth(i) = Voc(i)/Isc(i);
-    disp(['Zth' num2str(i) ' = ' num2str(Zth(i))])
-end
+Zth = Voc ./ Isc;
+disp(['Zth = ' num2str(Zth)])
 
-Rth = zeros(1,2);
-Xth = zeros(1,2);
-for i=1.0:1.0:2.0
-    Rth(i) = real(Zth(i));
-    Xth(i) = imag(Zth(i));
-    disp(['Rth' num2str(i) ' = ' num2str(Rth(i))])
-    disp(['Xth' num2str(i) ' = ' num2str(Xth(i))])
-end
+% Separate out Rth and Zth 
+Rth = real(Zth);
+Xth = imag(Zth);
+disp(['Rth = ' num2str(Rth)])
+disp(['Xth = ' num2str(Xth)])
+
 % Question 2
 
 % find Ns and ws
-Ns = (120*f)/p;
-disp(['Ns' num2str(i) ' = ' num2str(Ns)])
+Ns = (120*f)/p;                     %Ns is defined twice need to fix that
+    %disp(['Ns  = ' num2str(Ns)])
 ws = Ns*(2*pi/60);
 
 % Question 2 
 % Cerate s matrix
-Smin = 0;
+Smin = 1;
 Sstep = 1;
 Smax = 100;
 s = Smin:Sstep:Smax;
+% create Ns matrix
+Ns = flip(s);           % this is wrong and needs to be changed
 
 
-% Extract required constants
-Vth1 = Vth(1);          Vth2 = Vth(2);               
-Rth1 = Rth(1);          Rth2 = Rth(2);
-R21 = R2(1);            R22 = R2(2);
-Xth1 = Xth(1);          Xth2 = Xth(2);
-X21 = X2(1);            X22 = X2(2);
-Tm1 = zeros(1,101);     
-Tm2 = zeros(1,101);     
+    
 % Calc T
-for i = 1.0:1.0:101
-    Tm1(i) = 3*(1/ws)*((Vth1^2)/(((Rth1+R21/(0.01*s(i))^2))+((Xth1 + X21)^2)))*(R21/(0.01*s(i)));
-       %a = 3*(1/ws);
-    %b = (Rth1+R21/s(i))^2 + (Xth1+X21)^2;
-    %c = R21 / s(i);
-    %Tm1(i) = a*((Vth1^2)/b)*c;
-    Tm2(i)  = 3*(1/ws)*((Vth2^2)/(((Rth2+R22/(0.01*s(i))^2))+((Xth2 + X22)^2)))*(R22/(0.01*s(i)));
-end
+Tm1 = 3*(1/ws).*((Vth(1)^2) ./ ((Rth(1)+R2(1) ./ (0.01*Ns).^2)+((Xth(1) + X2(1)).^2))).*(R2(1)./(0.01*Ns));
+Tm2 = 3*(1/ws).*((Vth(2)^2) ./ ((Rth(2)+R2(2) ./ (0.01*Ns).^2)+((Xth(2) + X2(2)).^2))).*(R2(2)./(0.01*Ns));
 
-plot(s,Tm1, 'b-',s,Tm2,'r-')
+% create a figure window with subplots
+figure;
+subplot(3,1,1);
+% Plot Torque vs speed
+plot(s,Tm1, 'b-',s,Tm2,'r-')                    % plots are showing %Ns but need to be showing n 
 title('Torque vs Speed Characteristic')
-xlabel('%slip')
+xlabel('%Ns')
 ylabel('Torque(Nm)')
 legend('SE Motor', 'EE Motor')
+
+% Question 3 Stator current vs Speed
+Z11 = R1(1) + complex(0, X1(1)) + (complex(0,Xm(1)).*((R2(1)./(0.01*Ns))+complex(0,X2(1)))) ./ ((R2(1)./(0.01*Ns)) + complex(0, Xm(1)+X2(1))); %eqn is correct but outputting wrong values
+Z12 = R1(2) + complex(0, X1(2)) + (complex(0,Xm(2)).*((R2(2)./(0.01*Ns))+complex(0,X2(2)))) ./ ((R2(2)./(0.01*Ns)) + complex(0, Xm(2)+X2(2)));
+
+disp(['Z11 = ' num2str(Z11)])
+%disp(['Z12 = ' num2str(Z12)])
+I11 = Vp ./ abs(Z11);
+I12 = Vp ./ abs(Z12);
+
+% Plot current vs speed characteristic
+subplot(3,1,2)
+plot(s,I11, 'b-',s,I12,'r-')
+title('Stator current vs Speed Characteristic')
+xlabel('%s')
+ylabel('Torque(Nm)')
+legend('SE Motor', 'EE Motor')
+
+% Question 4
+theta1 = atan(imag(Z11)./real(Z11));
+pf1 = cos(theta1);
+theta2 = atan(imag(Z12) ./ real(Z12));
+pf2 = cos(theta2);
+
+%plot pf vs %Ns
+subplot(3,1,3)
+plot(s,pf1, 'b-',s,pf2,'r-')
+title('Power Factor vs Speed Characteristic')
+xlabel('%Ns')
+ylabel('Power Factor')
+legend('SE Motor', 'EE Motor')
+
+% Question 5
+
 
 
 
