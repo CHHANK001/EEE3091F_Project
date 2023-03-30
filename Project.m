@@ -8,14 +8,14 @@ clc %Clears the command window
 
 % Define variables
 R1 = double([2.087, 1.500]);
-X1 = double([4.274, 3.462]);
+X1 = double([4.274, 3.642]);
 Xm = double([66.560, 72.252]);
 X2 = double([4.274, 3.642]);
 R2 = double([2.122, 1.994]);
 Prot = double([134.669, 88.924]);
 Vline = 380;
 f = 50;
-p = 3;
+p = 4;
 Vp = double(Vline / sqrt(3));       % Calculates phase voltage
 
 
@@ -25,7 +25,7 @@ disp(['Vth ' num2str(Vth)])
 
 
 % Calculate Voc
-Voc = complex(0,Xm)./(R1 + complex(0,X1+Xm)).*Vp;
+Voc = (complex(0,Xm)./(R1 + complex(0,X1+Xm))).*Vp;
 disp(['Voc = ' num2str(Voc)])
 
 % Calculate Isc
